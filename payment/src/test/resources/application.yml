@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:~/payment
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    ddl-auto: create
+    hibernate:
+      ddl-auto: update
+  h2:
+    console.enabled: true
+server:
+  port : 8081
+  servlet:
+    context-path: /api
+account:
+  history:
+    size: 20
