@@ -20,10 +20,6 @@ public class AccountEntity {
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private CustomerEntity customer;
 
-//    @OneToMany(mappedBy = "post",
-//            cascade = CascadeType.ALL)
-//    private Set<CustomerTransactionEntity> customerTransactionEntities;
-
     public Long getAccountNumber() {
         return accountNumber;
     }

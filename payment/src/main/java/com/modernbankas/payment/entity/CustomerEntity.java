@@ -19,7 +19,7 @@ public class CustomerEntity {
     private String customerPhone;
     @Column
     private LocalDate Dob;
-    @Column(name = "ddate", nullable = false, updatable = false)
+    @Column(name = "createdDate", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDate createdDate;
     @Column

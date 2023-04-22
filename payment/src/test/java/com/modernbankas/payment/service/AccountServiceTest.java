@@ -5,6 +5,7 @@ import com.modernbankas.payment.entity.CustomerTransactionEntity;
 import com.modernbankas.payment.enums.TrasactionTypeEnum;
 import com.modernbankas.payment.exception.PaymentException;
 import com.modernbankas.payment.model.AccountResponse;
+import com.modernbankas.payment.model.Customer;
 import com.modernbankas.payment.model.TransactionHistoryResponse;
 import com.modernbankas.payment.model.TransferMoney;
 import com.modernbankas.payment.repository.CustomerAccountRepository;
@@ -19,7 +20,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
@@ -76,7 +80,7 @@ public class AccountServiceTest {
     @ParameterizedTest(name = "Scenario {index} Test failure reason {0}")
     @MethodSource("getFailureInput")
     void testAccountTransferException(String name, Long senderId, Long receiverId,
-                                      Optional<AccountEntity> sender, Optional<AccountEntity> receiver, String message) {
+                                      Optional<AccountEntity> sender, Optional<AccountEntity> receiver, Double amount, String message) {
 
         //mock
         when(customerAccountRepository.findById(senderId)).thenReturn(sender);
@@ -85,7 +89,7 @@ public class AccountServiceTest {
         PaymentException exception = assertThrows(PaymentException.class, () -> {
             //perform
             accountService.transferMoney(new TransferMoney(senderId
-                    , receiverId, 10.0));
+                    , receiverId, amount));
         });
         //verify
         assertEquals(message, exception.getMessage());
@@ -94,23 +98,37 @@ public class AccountServiceTest {
     @ParameterizedTest(name = "Scenario {index} {0}")
     @MethodSource("getTransactionHistoryInput")
     public void transactionHistoryTest(String name, Long accountNo, List<CustomerTransactionEntity> customerTransactionEntityList, Integer size) {
+        Pageable paging = PageRequest.of(0, size, Sort.Direction.DESC, "transactionTimeStamp");
         //mock
         when(customerAccountRepository.findById(any())).thenReturn(Optional.of(getAccountEntity(123L, 100.0)));
-        when(customerTransactionRepository.findAccountByOrderByTransactionTimeStampDesc(accountNo, PageRequest.of(0, 20))).thenReturn(customerTransactionEntityList);
+        when(customerTransactionRepository.findAllByAccountAccountNumber(accountNo, paging)).thenReturn(customerTransactionEntityList);
         //perform
         List<TransactionHistoryResponse> transactionHistoryResponses = accountService.fetchAccountHistory(accountNo);
         //verify
-        assertEquals(transactionHistoryResponses.size(), size);
-        verify(customerTransactionRepository).findAccountByOrderByTransactionTimeStampDesc(any(), any());
+        assertEquals(customerTransactionEntityList.size(), transactionHistoryResponses.size());
+        verify(customerTransactionRepository).findAllByAccountAccountNumber(any(), any());
+    }
+
+    @Test
+    @DisplayName("Test Account creation")
+    public void createAccountTest() {
+        //when(customerAccountRepository.findById(any())).thenReturn(Optional.of(getAccountEntity(ACCOUNTNUMBER, 200.0)));
+        //perform
+        accountService.createAccount(getCustomer());
+        verify(customerAccountRepository).save(any());
     }
 
     public static Stream<Arguments> getFailureInput() {
         return Stream.of(Arguments.of("Invalid sender account number", 123L, 124L, Optional.empty(),
-                        Optional.of(getAccountEntity(1234L, 200.0)), "Account cannot be found"),
+                        Optional.of(getAccountEntity(1234L, 200.0)), 10.0, "Account cannot be found"),
                 Arguments.of("Invalid receiver account number", 123L, 124L, Optional.of(getAccountEntity(123L, 20L)
-                ), Optional.empty(), "Account cannot be found"),
+                ), Optional.empty(), 10.0, "Account cannot be found"),
                 Arguments.of("Insufficient balance", 123L, 124L, Optional.of(getAccountEntity(123L, 10L))
-                        , Optional.of(getAccountEntity(1234L, 200.0)), "Insufficient funds available"));
+                        , Optional.of(getAccountEntity(1234L, 200.0)), 10.0, "Insufficient funds available"),
+                Arguments.of("Transfer 0 amount ", 123L, 124L, Optional.of(getAccountEntity(123L, 100L))
+                        , Optional.of(getAccountEntity(1234L, 200.0)), 0.0, "Not able to perform transaction"),
+                Arguments.of("Both sender and receiver same  ", 123L, 123L, Optional.of(getAccountEntity(123L, 100L))
+                        , Optional.of(getAccountEntity(123L, 200.0)), 10.0, "Not able to perform transaction"));
     }
 
     public static Stream<Arguments> getInput() {
@@ -121,20 +139,19 @@ public class AccountServiceTest {
     }
 
     public static Stream<Arguments> getTransactionHistoryInput() {
-        return Stream.of(Arguments.of("Valid account no with 20 transaction", 123L, getCustomerTransactionEntities(20), 20),
-                Arguments.of("Valid account with 0 transaction", 123L, getCustomerTransactionEntities(0), 0),
-                Arguments.of("Valid account with less than 20 transaction", 123L, getCustomerTransactionEntities(12), 12));
+        return Stream.of(Arguments.of("Valid account no with 20 plus transaction", 123L, getCustomerTransactionEntities(20), 20),
+                Arguments.of("Valid account with 0 transaction", 123L, getCustomerTransactionEntities(0), 1));
     }
 
     private static ArrayList<CustomerTransactionEntity> getCustomerTransactionEntities(int initialCapacity) {
-        ArrayList<CustomerTransactionEntity>customerTransactionEntities=new ArrayList<>();
+        ArrayList<CustomerTransactionEntity> customerTransactionEntities = new ArrayList<>();
         for (int i = 0; i < initialCapacity; i++) {
-            CustomerTransactionEntity customerTransactionEntity= new CustomerTransactionEntity();
+            CustomerTransactionEntity customerTransactionEntity = new CustomerTransactionEntity();
             customerTransactionEntity.setCurrency("NOK");
             customerTransactionEntity.setTransactionType(TrasactionTypeEnum.DEBIT.name());
             customerTransactionEntity.setAmount(100.0);
             customerTransactionEntity.setTransactionTimeStamp(LocalDateTime.now());
-            customerTransactionEntities.add(customerTransactionEntity) ;
+            customerTransactionEntities.add(customerTransactionEntity);
         }
         return customerTransactionEntities;
     }
@@ -144,5 +161,9 @@ public class AccountServiceTest {
         accountEntity.setBalance(balance);
         accountEntity.setAccountNumber(accountNumber);
         return accountEntity;
+    }
+
+    private Customer getCustomer() {
+        return new Customer("test", "test@g.com", "94008464", "25-03-1995");
     }
 }

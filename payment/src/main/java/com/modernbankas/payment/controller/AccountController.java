@@ -7,11 +7,13 @@ import com.modernbankas.payment.model.TransferMoney;
 import com.modernbankas.payment.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.logging.Logger;
 
+/**
+ * Controller class to accept account related requests
+ */
 @RestController
 @RequestMapping(path = "/accounts")
 public class AccountController {
@@ -28,16 +30,19 @@ public class AccountController {
         return new ResponseEntity<>(accountService.fetchAccountBalance(accountNumber),HttpStatus.OK);
     }
     @PostMapping("/transfer")
-    public ResponseEntity transferMoney(@Validated TransferMoney transferMoney){
+    public ResponseEntity transferMoney(@RequestBody  TransferMoney transferMoney){
         logger.info("transfer money initiated for account "+transferMoney.recieverId());
         accountService.transferMoney(transferMoney);
         return new ResponseEntity(HttpStatus.OK);
     }
+
+
     @GetMapping("/{accountNumber}/statements/mini")
     public ResponseEntity<TransactionHistoryResponse> getMiniStatement(@PathVariable Long accountNumber){
         logger.info("mini statement flow initiated for account "+accountNumber);
         return new ResponseEntity(accountService.fetchAccountHistory(accountNumber),HttpStatus.OK);
     }
+    //Added just for C operations not specified in the requirements
     @PostMapping("/create")
     public ResponseEntity createAccount(@RequestBody Customer customer)
     {

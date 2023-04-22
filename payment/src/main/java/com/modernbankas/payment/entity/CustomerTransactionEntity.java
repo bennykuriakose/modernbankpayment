@@ -2,6 +2,7 @@ package com.modernbankas.payment.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -15,20 +16,24 @@ public class CustomerTransactionEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String transactionType;
 
-    @Column
+    @Column(nullable = false)
     private Double amount;
 
-    @Column
+    @Column(nullable = false)
     private String currency;
 
-    @Column
+    @Column(nullable = false)
+    private Long cPart;
+
+    @Column(name = "transactionTimeStamp", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime transactionTimeStamp;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_no", nullable = false)
+    @JoinColumn(name = "account", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private AccountEntity account;
@@ -75,6 +80,14 @@ public class CustomerTransactionEntity {
 
     public AccountEntity getAccountEntity() {
         return account;
+    }
+
+    public Long getcPart() {
+        return cPart;
+    }
+
+    public void setcPart(Long cPart) {
+        this.cPart = cPart;
     }
 
     public void setAccountEntity(AccountEntity accountEntity) {
