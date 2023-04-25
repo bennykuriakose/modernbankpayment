@@ -3,6 +3,7 @@ package com.modernbankas.payment.exception;
 import com.modernbankas.payment.service.impl.AccountServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -20,6 +21,11 @@ public class PaymentExceptionHandler {
     @ExceptionHandler(PaymentException.class)
     public ResponseEntity<String> paymentExceptionHandler(PaymentException ex) {
         return new ResponseEntity(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<String> objectOptimisticLockingFailureExceptionHandler(PaymentException ex) {
+        return new ResponseEntity("Please retry after sometime", HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
     @ExceptionHandler(Exception.class)

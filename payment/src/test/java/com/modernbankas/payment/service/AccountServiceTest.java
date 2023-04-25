@@ -20,13 +20,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +92,7 @@ public class AccountServiceTest {
         //verify
         assertEquals(message, exception.getMessage());
     }
+
 
     @ParameterizedTest(name = "Scenario {index} {0}")
     @MethodSource("getTransactionHistoryInput")

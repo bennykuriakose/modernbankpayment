@@ -16,6 +16,9 @@ public class AccountEntity {
 
     @Column
     private String currency;
+
+    @Version
+    private int version;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private CustomerEntity customer;
@@ -60,5 +63,12 @@ public class AccountEntity {
         this.currency = currency;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 
 }

@@ -2,17 +2,17 @@ package com.modernbankas.payment.repository;
 
 import com.modernbankas.payment.entity.AccountEntity;
 import com.modernbankas.payment.entity.CustomerTransactionEntity;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @DataJpaTest
-@ExtendWith(SpringExtension.class)
 public class AbstractRepositoryTest {
     @Autowired
     public TestEntityManager testEntityManager;
@@ -30,5 +30,12 @@ public class AbstractRepositoryTest {
         customerTransactionEntity.setAccountEntity(accountEntity);
         testEntityManager.persist(accountEntity);
         return testEntityManager.persist(customerTransactionEntity);
+    }
+@Transactional
+    public Long createAccountEntity() {
+        AccountEntity accountEntity= new AccountEntity();
+        accountEntity.setBalance(10.0);
+        accountEntity.setCurrency("nok");
+        return testEntityManager.persist(accountEntity).getAccountNumber();
     }
 }

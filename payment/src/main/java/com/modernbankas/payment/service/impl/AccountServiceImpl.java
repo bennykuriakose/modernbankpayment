@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -123,17 +125,21 @@ public class AccountServiceImpl implements AccountService {
      * @param transferMoney
      */
     @Override
-    @Transactional
     public void transferMoney(TransferMoney transferMoney) {
         validateTransfer(transferMoney);
+        transferMoneyBetweenAccounts(transferMoney);
+    }
+
+    @Transactional
+    public void transferMoneyBetweenAccounts(TransferMoney transferMoney) {
         AccountEntity senderDetails = getAccountDetails(transferMoney.senderId());
         AccountEntity receiverDetails = getAccountDetails(transferMoney.recieverId());
         //check eligibility for the transaction
         checkAccountBalance(senderDetails, transferMoney.amount());
         senderDetails.setBalance(senderDetails.getBalance() - transferMoney.amount());
         receiverDetails.setBalance(receiverDetails.getBalance() + transferMoney.amount());
-        createTransactionHistory(senderDetails, receiverDetails, transferMoney.amount());
         performTransaction(senderDetails, receiverDetails);
+        createTransactionHistory(senderDetails, receiverDetails, transferMoney.amount());
         logger.info("Account transfer successfully done from accountNumber" + transferMoney.senderId());
     }
 
@@ -189,11 +195,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void updateAccountDetails(AccountEntity accountEntity) {
-        try{
-        customerAccountRepository.save(accountEntity);
-    } catch (OptimisticLockException e) {
-        throw new PaymentException("Unable to save changes due to concurrent modification please retry");
-    }
+            customerAccountRepository.save(accountEntity);
     }
 
     /**
@@ -215,7 +217,7 @@ public class AccountServiceImpl implements AccountService {
     private void validateTransfer(TransferMoney transferMoney) {
         if (transferMoney.senderId() == null
                 || transferMoney.recieverId() == null
-                || transferMoney.recieverId() == transferMoney.senderId()
+                || transferMoney.recieverId().equals(transferMoney.senderId())
                 || transferMoney.amount() <= 0)
             throw new PaymentException("Not able to perform transaction");
     }
