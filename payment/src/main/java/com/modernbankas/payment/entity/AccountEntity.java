@@ -60,11 +60,5 @@ public class AccountEntity {
         this.currency = currency;
     }
 
-//    public Set<CustomerTransactionEntity> getCustomerTransactionEntities() {
-//        return customerTransactionEntities;
-//    }
-//
-//    public void setCustomerTransactionEntities(Set<CustomerTransactionEntity> customerTransactionEntities) {
-//        this.customerTransactionEntities = customerTransactionEntities;
-//    }
+
 }

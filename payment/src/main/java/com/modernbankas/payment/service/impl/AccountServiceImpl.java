@@ -12,6 +12,7 @@ import com.modernbankas.payment.model.TransferMoney;
 import com.modernbankas.payment.repository.CustomerAccountRepository;
 import com.modernbankas.payment.repository.CustomerTransactionRepository;
 import com.modernbankas.payment.service.AccountService;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -188,7 +189,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void updateAccountDetails(AccountEntity accountEntity) {
+        try{
         customerAccountRepository.save(accountEntity);
+    } catch (OptimisticLockException e) {
+        throw new PaymentException("Unable to save changes due to concurrent modification please retry");
+    }
     }
 
     /**
